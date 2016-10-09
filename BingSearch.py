@@ -36,6 +36,7 @@ def writeTranscript(msg):
         logFile.write( msg+'\n')
 
 
+
 def extractWords(db):
 	word_list = re.compile('\w+').findall(db)
 	word_list = [word.lower() for word in word_list]
@@ -125,7 +126,7 @@ R = [dict()]
 NR = [dict()]
 BING_API_KEY = 'mz6wWvhFVxhgbqlz+aDPIa/V1uaygzWZreeE3L3+7CA'
 CREDENTIAL = 'Basic ' + (':%s' % BING_API_KEY).encode('base64')[:-1]
-RESULT_NUM = 3
+RESULT_NUM = 10
 TRANSCRIPT_FILE = './transcript.txt'
 ALPHA = 1
 BETA1 = 1.5
@@ -158,7 +159,7 @@ if len(sys.argv) == 3:
 		requestOpener = urllib2.build_opener()
 		response = requestOpener.open(request)
 		results = json.load(response)['d']['results']
-		print('Total number of results : '+len(results))
+		print('Total number of results : '+str(len(results)))
 		print('======================')
 		print('Bing Search Results: ')
 		# use some data structure to collect the user feedback
