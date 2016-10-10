@@ -7,13 +7,18 @@ import sys
 import re
 import operator
 import os
+
+# Fix encoding
 import sys  
-reload(sys)  
+reload(sys)
 sys.setdefaultencoding('utf8')
+
+# A list of stop words provided by Professor Luis
 STOP_WORDS = ['a', 'ii', 'about', 'above', 'according', 'across', '39', 'actually', 'ad', 'adj', 'ae', 'af', 'after', 'afterwards', 'ag', 'again', 'against', 'ai', 'al', 'all', 'almost', 'alone', 'along', 'already', 'also', 'although', 'always', 'am', 'among', 'amongst', 'an', 'and', 'another', 'any', 'anyhow', 'anyone', 'anything', 'anywhere', 'ao', 'aq', 'ar', 'are', 'aren', "aren't", 'around', 'arpa', 'as', 'associate', 'at', 'au', 'aw', 'az', 'b', 'ba', 'bb', 'bd', 'be', 'became', 'because', 'become', 'becomes', 'becoming', 'been', 'before', 'beforehand', 'begin', 'beginning', 'behind', 'being', 'below', 'beside', 'besides', 'between', 'beyond', 'bf', 'bg', 'bh', 'bi', 'billion', 'bj', 'bm', 'bn', 'bo', 'both', 'br', 'bs', 'bt', 'but', 'buy', 'bv', 'bw', 'by', 'bz', 'c', 'ca', 'can', "can't", 'cannot', 'caption', 'cc', 'cd', 'cf', 'cg', 'ch', 'ci', 'ck', 'cl', 'click', 'cm', 'cn', 'co', 'co.', 'com', 'copy', 'could', 'couldn', "couldn't", 'cr', 'cs', 'cu', 'cv', 'cx', 'cy', 'cz', 'd', 'de', 'did', 'didn', "didn't", 'dj', 'dk', 'dm', 'do', 'does', 'doesn', "doesn't", 'don', "don't", 'down', 'during', 'dz', 'e', 'each', 'ec', 'edu', 'ee', 'eg', 'eh', 'eight', 'eighty', 'either', 'else', 'elsewhere', 'end', 'ending', 'enough', 'ep', 'er', 'es', 'et', 'etc', 'even', 'ever', 'every', 'everyone', 'everything', 'everywhere', 'except', 'f', 'few', 'fi', 'fifty', 'find', 'first', 'five', 'fj', 'fk', 'fm', 'fo', 'for', 'former', 'formerly', 'forty', 'found', 'four', 'fr', 'free', 'from', 'further', 'fx', 'g', 'ga', 'gb', 'gd', 'ge', 'get', 'gf', 'gg', 'gh', 'gi', 'gl', 'gm', 'gmt', 'gn', 'go', 'gov', 'gp', 'gq', 'gr', 'gs', 'gt', 'gu', 'gw', 'gy', 'h', 'had', 'has', 'hasn', "hasn't", 'have', 'haven', "haven't", 'he', "he'd", "he'll", "he's", 'help', 'hence', 'her', 'here', "here's", 'hereafter', 'hereby', 'herein', 'hereupon', 'hers', 'herself', 'him', 'himself', 'his', 'hk', 'hm', 'hn', 'home', 'homepage', 'how', 'however', 'hr', 'ht', 'htm', 'html', 'http', 'hu', 'hundred', 'i', "i'd", "i'll", "i'm", "i've", 'i.e.', 'id', 'ie', 'if', 'il', 'im', 'in', 'inc', 'inc.', 'indeed', 'information', 'instead', 'int', 'into', 'io', 'iq', 'ir', 'is', 'isn', "isn't", 'it', "it's", 'its', 'itself', 'j', 'je', 'jm', 'jo', 'join', 'jp', 'k', 'ke', 'kg', 'kh', 'ki', 'km', 'kn', 'kp', 'kr', 'kw', 'ky', 'kz', 'l', 'la', 'last', 'later', 'latter', 'lb', 'lc', 'least', 'less', 'let', "let's", 'li', 'like', 'likely', 'lk', 'll', 'lr', 'ls', 'lt', 'ltd', 'lu', 'lv', 'ly', 'm', 'ma', 'made', 'make', 'makes', 'many', 'maybe', 'mc', 'md', 'me', 'meantime', 'meanwhile', 'mg', 'mh', 'microsoft', 'might', 'mil', 'million', 'miss', 'mk', 'ml', 'mm', 'mn', 'mo', 'more', 'moreover', 'most', 'mostly', 'mp', 'mq', 'mr', 'mrs', 'ms', 'msie', 'mt', 'mu', 'much', 'must', 'mv', 'mw', 'mx', 'my', 'myself', 'mz', 'n', 'na', 'namely', 'nc', 'ne', 'neither', 'net', 'netscape', 'never', 'nevertheless', 'new', 'next', 'nf', 'ng', 'ni', 'nine', 'ninety', 'nl', 'no', 'nobody', 'none', 'nonetheless', 'noone', 'nor', 'not', 'nothing', 'now', 'nowhere', 'np', 'nr', 'nu', 'nz', 'o', 'of', 'off', 'often', 'om', 'on', 'once', 'one', "one's", 'only', 'onto', 'or', 'org', 'other', 'others', 'otherwise', 'our', 'ours', 'ourselves', 'out', 'over', 'overall', 'own', 'p', 'pa', 'page', 'pe', 'per', 'perhaps', 'pf', 'pg', 'ph', 'pk', 'pl', 'pm', 'pn', 'pr', 'pt', 'pw', 'py', 'q', 'qa', 'r', 'rather', 're', 'recent', 'recently', 'reserved', 'ring', 'ro', 'ru', 'rw', 's', 'sa', 'same', 'sb', 'sc', 'sd', 'se', 'seem', 'seemed', 'seeming', 'seems', 'seven', 'seventy', 'several', 'sg', 'sh', 'she', "she'd", "she'll", "she's", 'should', 'shouldn', "shouldn't", 'si', 'since', 'site', 'six', 'sixty', 'sj', 'sk', 'sl', 'sm', 'sn', 'so', 'some', 'somehow', 'someone', 'something', 'sometime', 'sometimes', 'somewhere', 'sr', 'st', 'still', 'stop', 'su', 'such', 'sv', 'sy', 'sz', 't', 'taking', 'tc', 'td', 'ten', 'tells', 'text', 'tf', 'tg', 'test', 'th', 'than', 'that', "that'll", "that's", 'the', 'their', 'them', 'themselves', 'then', 'thence', 'there', "there'll", "there's", 'thereafter', 'thereby', 'therefore', 'therein', 'thereupon', 'these', 'they', "they'd", "they'll", "they're", "they've", 'thirty', 'this', 'those', 'though', 'thousand', 'three', 'through', 'throughout', 'thru', 'thus', 'tj', 'tk', 'tm', 'tn', 'to', 'together', 'too', 'toward', 'towards', 'tp', 'tr', 'trillion', 'tt', 'tv', 'tw', 'twenty', 'two', 'tz', 'u', 'ua', 'ug', 'uk', 'um', 'under', 'unless', 'unlike', 'unlikely', 'until', 'up', 'upon', 'us', 'use', 'used', 'using', 'uy', 'uz', 'v', 'va', 'vc', 've', 'very', 'vg', 'vi', 'via', 'vn', 'vu', 'w', 'was', 'wasn', "wasn't", 'we', "we'd", "we'll", "we're", "we've", 'web', 'webpage', 'website', 'welcome', 'well', 'were', 'weren', "weren't", 'wf', 'what', "what'll", "what's", 'whatever', 'when', 'whence', 'whenever', 'where', 'whereafter', 'whereas', 'whereby', 'wherein', 'whereupon', 'wherever', 'whether', 'which', 'while', 'whither', 'who', "who'd", "who'll", "who's", 'whoever', 'NULL', 'whole', 'whom', 'whomever', 'whose', 'why', 'wi', 'will', 'with', 'within', 'without', 'won', "won't", 'would', 'wouldn', "wouldn't", 'ws', 'www', 'x', 'y', 'ye', 'yes', 'yet', 'you', "you'd", "you'll", "you're", "you've", 'your', 'yours', 'yourself', 'yourselves', 'yt', 'yu', 'z', 'za', 'zm', 'zr', '10', 'z', 'href']
-# same list of words,
+
+# Pre-processing the titles of documents: mainly cutting off the tail in title. 
+# Example: Changing from 'Musk - Wikipedia, the free encyclopedia' to 'Musk'
 def preprocessTitle(Title):
-	# print("Title before preprocess: "+ Title)
 	if ' - ' in Title:
 		Title = Title[:Title.find(' - ')] 
 	elif ' — ' in Title:
@@ -24,18 +29,20 @@ def preprocessTitle(Title):
 		Title = Title[:Title.find(' | ')]
 	elif ': ' in Title:
 		Title = Title[:Title.find(': ')]
-	# print("Title after preprocess: "+ Title)
 	return Title
 
+# Method for writing message into a file by appending
 def writeTranscript(msg):
     if not os.path.exists(os.path.dirname(TRANSCRIPT_FILE)):
       os.makedirs(os.path.dirname(TRANSCRIPT_FILE))
     with open(TRANSCRIPT_FILE, 'a') as logFile:
         logFile.write( msg+'\n')
 
+# Helper function for stemming, to check if a word contains number
 def containsNumbers(s):
 		return any(char.isdigit() for char in s)
-	
+
+# A stemming function for words that have appeared in the dictionary
 def stemDerivaties(dictionary):
 	stemmedDict = dict(dictionary)
 	derivatives = []
@@ -48,18 +55,19 @@ def stemDerivaties(dictionary):
 	for der in derivatives:
 		if der in stemmedDict:
 			del stemmedDict[der]
-			print ('Deleted ' + der)
+			# print ('Deleted ' + der)
 	
 	return stemmedDict
 
 
-
+# Extract words from a string, lowercase them, and return a list of them.
 def extractWords(db):
 	word_list = re.compile('\w+').findall(db)
 	word_list = [word.lower() for word in word_list]
 	word_list = [word for word in word_list if word not in STOP_WORDS]
 	return word_list
 	
+# process the feed back, implement the rocchio algorithm, and come up with the new words.
 def processFeedBack(Q, R, NR):
 	dictionary = dict()
 	global QUERY
@@ -96,8 +104,14 @@ def processFeedBack(Q, R, NR):
 						dictionary[word] = GAMMA1
 					elif key == 'Description':
 						dictionary[word] = GAMMA2
+	
+	# Invoking the stemmer
 	dictionary = stemDerivaties(dictionary)	
+
+	# Sorting 
 	sorted_dict = sorted(dictionary.items(), key=operator.itemgetter(1), reverse=True)
+	
+	# Selecting
 	word_cnt = 0
 	qry_str = ''
 	for word in sorted_dict:
@@ -108,30 +122,34 @@ def processFeedBack(Q, R, NR):
 				qry_str += '%20' + word[0]
 				QUERY += ' '+word[0]
 				word_cnt += 1
+	
 	return [qry_str,Q]
 
-#def getKeyWords(wordList)
-	
-
-# /home/gravano/6111/Html/Proj1/run.sh mz6wWvhFVxhgbqlz+aDPIa/V1uaygzWZreeE3L3+7CA 0.9 'gates'
-# python search.py target precision keywords
-# TARGET_PRECISION = 2
-# QUERY = 'Taj Mahal'
+# Lists of relevant and irrelevant documents.
 R = [dict()]
 NR = [dict()]
-BING_API_KEY = 'mz6wWvhFVxhgbqlz+aDPIa/V1uaygzWZreeE3L3+7CA'
-CREDENTIAL = 'Basic ' + (':%s' % BING_API_KEY).encode('base64')[:-1]
+
+BING_API_KEY = ''#'<API_KEY>'
 RESULT_NUM = 10
 TRANSCRIPT_FILE = './transcript.txt'
+
+# The coefficients of Rocchio algorithm
 ALPHA = 1
 BETA1 = 1.5
 BETA2 = 1
 GAMMA1 = -0.75
 GAMMA2 = -0.5
+
+# A flag to terminate the program, in case of precision is 0 or less than 10 result documents
 fail = False
-if len(sys.argv) == 3:
-	TARGET_PRECISION = float(sys.argv[1])
-	QUERY = sys.argv[2]
+
+if len(sys.argv) == 4:
+	# get input
+	TARGET_PRECISION = float(sys.argv[2])
+	QUERY = sys.argv[3]
+	BING_API_KEY = sys.argv[1]
+	CREDENTIAL = 'Basic ' + (':%s' % BING_API_KEY).encode('base64')[:-1]
+	print(BING_API_KEY)
 	precision = 0
 	searchString = QUERY.split(' ')
 	searchString = '+'.join(searchString)
@@ -142,17 +160,18 @@ if len(sys.argv) == 3:
 	print('Query\t\t = '+QUERY)
 	print('Target Precision= '+str(TARGET_PRECISION))
 	# writeTranscript('\n')
-	while precision<TARGET_PRECISION:
+	while precision < TARGET_PRECISION:
+		# Iterate until the presicion reach the target
 		writeTranscript('=====================================')
 		writeTranscript('ROUND '+str(round_cnt) )
 		writeTranscript('QUERY: '+QUERY)
 		print('======================')
 		relevantCount = 0
 		nrCount = 0
+		# Form the URL, and get the data by issuing REST request to the Bing API
 		url = 'https://api.datamarket.azure.com/Bing/Search/Web?' + \
 		'Query=%s&$top=%d&$format=json' % (searchString, RESULT_NUM)
 		print("URL: "+url)
-
 		request = urllib2.Request(url)
 		request.add_header('Authorization', CREDENTIAL)
 		requestOpener = urllib2.build_opener()
@@ -168,6 +187,7 @@ if len(sys.argv) == 3:
 			fail = True
 			break
 		for result in results:
+			# Get user feedback for each document
 			writeTranscript('\nResult '+str(idx))
 			print('Result '+ str(idx))
 			print("[")
@@ -176,6 +196,7 @@ if len(sys.argv) == 3:
 			print("\tSummary: "+result['Description'])
 			print("]")
 			while True:
+				# Get and record user feedback
 				userFeedback = raw_input("Relevant (Y/N)?")
 				print('\n')
 				if len(userFeedback) > 1:
@@ -209,16 +230,17 @@ if len(sys.argv) == 3:
 			idx += 1
 		precision = float(relevantCount)/RESULT_NUM
 		writeTranscript('Precision: %.1f' % precision )
+		# if no document is relevant, terminate the program
 		if precision == 0:
 			print('Precision is: %.1f' % precision)
 			print('Program Terminated')
 			fail = True
 			break
-		if precision<TARGET_PRECISION:
-			print('Precision of this round: %.4f' % precision)
+		# if the precision is not good enough, call processFeedBack() to augment the query
+		if precision < TARGET_PRECISION:
+			print('Precision: %.1f' % precision)
 			Q = extractWords(QUERY)
 			qry_str,Q = processFeedBack(Q, R, NR)
-			print("Precision: "+str(precision))
 			print("New Query: "+QUERY)
 			searchString = searchString[:-3] + qry_str+'%27'
 		# else:
@@ -226,5 +248,5 @@ if len(sys.argv) == 3:
 	if not fail:
 		print("Succeeded. "+("\nFinal precision: %.1f" % precision)+".\nFinal Query: "+QUERY )
 else:
-	print('Usage: python BingSearch.py <TARGET_PRECISION> <QUERY>')
-	print("Take 2 Parameters")
+	print('Usage: python BingSearch.py <BING_API_KEY> <TARGET_PRECISION> <QUERY>')
+	print("Take 3 Parameters")
